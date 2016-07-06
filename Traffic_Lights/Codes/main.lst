@@ -1,0 +1,294 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000         ;|**************************************|
+    2 00000000         ;|            |
+    3 00000000         ;|         ..::/Rad!n\::..     |
+    4 00000000         ;|       Final Project     |
+    5 00000000         ;|       Spring 2016       |
+    6 00000000         ;|            |
+    7 00000000         ;|**************************************| 
+    8 00000000         
+    9 00000000                 AREA             RESET, CODE
+   10 00000000         
+   11 00000000                 ENTRY
+   12 00000000         ; disable watchdog timer
+   13 00000000 E59F0148        LDR              R0, =0XFFFFFD44
+   14 00000004 E3A01902        LDR              R1, =0X00008000
+   15 00000008 E5801000        STR              R1, [R0]
+   16 0000000C         
+   17 0000000C         ; define base registers
+   18 0000000C E59F1140        LDR              R1, =0XFFFFF400 ; GPIOA 
+   19 00000010 E59F2140        LDR              R2, =0XFFFFFD20 
+                                                            ; Real Time Timer
+   20 00000014         
+   21 00000014         ;initializing port A
+   22 00000014 E59F0140        LDR              R0, =0X03F0FC3F
+   23 00000018 E5810000        STR              R0, [R1]
+   24 0000001C         
+   25 0000001C         ;definition for Output
+   26 0000001C E3A00007        LDR              R0, =0X7
+   27 00000020 E5810010        STR              R0, [R1, #0X10]
+   28 00000024         
+   29 00000024         ;reset all output legs
+   30 00000024 E3E00000        MVN              R0,#0X0
+   31 00000028 E5810034        STR              R0,[R1, #0X34]
+   32 0000002C         
+   33 0000002C         ;start timer 1Hz
+   34 0000002C E3A00912        LDR              R0,=0X48000
+   35 00000030 E5820000        STR              R0,[R2]
+   36 00000034 E3A00902        LDR              R0,=0X8000
+   37 00000038 E5820000        STR              R0,[R2]
+   38 0000003C         
+   39 0000003C         ;saving interval values into registers
+   40 0000003C E3A0A00A        LDR              R10, =0XA   ;Green light interv
+                                                            al   => 10s
+   41 00000040 E3A0901E        LDR              R9,  =0X1E  ;Red light interval
+                                                                => 30s
+   42 00000044         
+   43 00000044         ; Traffic Lights
+   44 00000044 E3E04000 
+                       Main    MVN              R4, #0X00   ; clear output pins
+                                                            
+   45 00000048 E5814034        STR              R4, [R1, #0X34]
+   46 0000004C E5920008        LDR              R0, [R2, #0X8]
+   47 00000050 E591403C 
+                       Green   LDR              R4, [R1, #0X3C] ; Reading input
+                                                             pins
+   48 00000054 E2145008        ANDS             R5, R4,#0X00000008 ; Masking to
+                                                             Check if PA3 statu
+                                                            s
+   49 00000058 03770001        CMPEQ            R7,#0XFFFFFFFF
+   50 0000005C 03A07000        LDREQ            R7, =0X0    ; Clearing flag
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   51 00000060 0A00000D        BEQ              imm_Y
+   52 00000064 E5923008        LDR              R3, [R2, #0X8]
+   53 00000068 E3A04002        LDR              R4, =0X02   ; turn Second bit o
+                                                            n
+   54 0000006C E5814030        STR              R4, [R1, #0X30] ; store it to S
+                                                            ODR for setting thi
+                                                            s PIN
+   55 00000070 E591403C        LDR              R4, [R1, #0X3C] ; Reading input
+                                                             pins
+   56 00000074 E2145020        ANDS             R5, R4,#0X00000020 ; Masking to
+                                                             Check if PA5 is Hi
+                                                            gh
+   57 00000078 1A00002B        BNE              T_U         ; Jumping to Interv
+                                                            al Unpdating subrou
+                                                            tine
+   58 0000007C E2045018 
+                       G_res   AND              R5, R4,#0X00000018 ; Masking to
+                                                             Check if PA3 & PA4
+                                                             status
+   59 00000080 E3550018        CMP              R5, #0X00000018 ; PA3 and PA4 r
+                                                            ae High
+   60 00000084 03E07000        MVNEQ            R7, #0X0    ; R7 would be set a
+                                                            s flag 
+   61 00000088 0A000003        BEQ              imm_Y
+   62 0000008C E043300A        SUB              R3, R3, R10
+   63 00000090 E1530000        CMP              R3, R0
+   64 00000094 1AFFFFED        BNE              Green
+   65 00000098 E1A0A00B        MOV              R10, R11
+   66 0000009C         
+   67 0000009C E3E04000 
+                       imm_Y   MVN              R4, #0X00   ; clear output pins
+                                                            
+   68 000000A0 E5814034        STR              R4, [R1, #0X34]
+   69 000000A4 E5920008        LDR              R0, [R2, #0X8]
+   70 000000A8 E591403C 
+                       Yellow  LDR              R4, [R1, #0X3C] ; Reading input
+                                                             pins
+   71 000000AC E2145008        ANDS             R5, R4,#0X00000008 ; Masking to
+                                                             Check if PA3 statu
+                                                            s
+   72 000000B0 03770001        CMPEQ            R7,#0XFFFFFFFF
+   73 000000B4 03A07000        LDREQ            R7, =0X0    ; Clearing flag
+   74 000000B8 E5923008        LDR              R3, [R2, #0X8]
+   75 000000BC E3A04001        LDR              R4, =0X01   ; turn First bit on
+                                                            
+   76 000000C0 E5814030        STR              R4, [R1, #0X30] ; store it to S
+                                                            ODR for setting thi
+                                                            s PIN
+   77 000000C4 E2045018        AND              R5, R4,#0X00000018 ; Masking to
+                                                             Check if PA3 & PA4
+                                                             status
+   78 000000C8 E3550008        CMP              R5, #0X00000008 ; PA3 is High a
+                                                            nd PA4 is Low
+   79 000000CC 03E07000        MVNEQ            R7, #0X0    ; R7 would be set a
+                                                            s flag
+   80 000000D0 0AFFFFDB        BEQ              Main
+   81 000000D4 E2433003        SUB              R3, R3, #0X3
+   82 000000D8 E1530000        CMP              R3, R0
+   83 000000DC 1AFFFFF1        BNE              Yellow
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   84 000000E0         
+   85 000000E0 E3E04000        MVN              R4, #0X00   ; clear output pins
+                                                            
+   86 000000E4 E5814034        STR              R4, [R1, #0X34]
+   87 000000E8 E5920008        LDR              R0, [R2, #0X8]
+   88 000000EC E591403C 
+                       Red     LDR              R4, [R1, #0X3C] ; Reading input
+                                                             pins
+   89 000000F0 E2145008        ANDS             R5, R4,#0X00000008 ; Masking to
+                                                             Check if PA3 statu
+                                                            s
+   90 000000F4 03770001        CMPEQ            R7,#0XFFFFFFFF
+   91 000000F8 03A07000        LDREQ            R7, =0X0    ; Clearing flag
+   92 000000FC 05920008        LDREQ            R0, [R2, #0X8] ; Reseting timer
+                                                            
+   93 00000100 E5923008        LDR              R3, [R2, #0X8]
+   94 00000104 E3A04004        LDR              R4, =0X04   ; turn Third bit on
+                                                            
+   95 00000108 E5814030        STR              R4, [R1, #0X30] ; store it to S
+                                                            ODR for setting thi
+                                                            s PIN
+   96 0000010C E2045018        AND              R5, R4,#0X00000018 ; Masking to
+                                                             Check if PA3 & PA4
+                                                             status
+   97 00000110 E3550008        CMP              R5, #0X00000008 ; PA3 is High a
+                                                            nd PA4 is Low
+   98 00000114 03E07000        MVNEQ            R7, #0X0    ; R7 would be set a
+                                                            s flag
+   99 00000118 0AFFFFC9        BEQ              Main
+  100 0000011C E0433009        SUB              R3, R3, R9
+  101 00000120 E1530000        CMP              R3, R0
+  102 00000124 1AFFFFF0        BNE              Red
+  103 00000128         
+  104 00000128 EAFFFFC5        B                Main
+  105 0000012C         
+  106 0000012C         ;Intervals updating subroutine
+  107 0000012C E2145B3F 
+                       T_U     ANDS             R5, R4, #0X0000FC00 
+                                                            ; PA10-PA15 Mask
+  108 00000130 E1A0B4A5        MOV              R11, R5, LSR #9 ; needed 10 lsr
+                                                             to reach the LSB b
+                                                            ut with considering
+                                                             the 2s multiplying
+                                                             then it would be 9
+                                                            lsr
+  109 00000134 E35B0006        CMP              R11, #0X6   ; checking to make 
+                                                            sure value is great
+                                                            er than 6s
+  110 00000138 93A0B006        MOVLS            R11, #0X6
+  111 0000013C E214563F        ANDS             R5, R4, #0X03F00000 
+                                                            ; PA20-PA25 Mask
+  112 00000140 E1A099A5        MOV              R9, R5, LSR #19 ; needed 20 lsr
+                                                             to reach the LSB b
+                                                            ut with considering
+                                                             the 2s multiplying
+                                                             then it would be 1
+                                                            9lsr
+  113 00000144 E3590006        CMP              R9, #0X6    ; checking to make 
+                                                            sure value is great
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+                                                            er than 6s
+  114 00000148 93A09006        MOVLS            R9, #0X6
+  115 0000014C EAFFFFCA        B                G_res
+  116 00000150         
+  117 00000150                 END
+              FFFFFD44 
+              FFFFF400 
+              FFFFFD20 
+              03F0FC3F 
+Command Line: --debug --xref --apcs=interwork --depend=main.d -omain.o -IC:\Kei
+l\ARM\RV31\Inc -IC:\Keil\ARM\CMSIS\Include -IC:\Keil\ARM\Inc\Atmel\SAM7X --list
+=main.lst main.asm
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+G_res 0000007C
+
+Symbol: G_res
+   Definitions
+      At line 58 in file main.asm
+   Uses
+      At line 115 in file main.asm
+Comment: G_res used once
+Green 00000050
+
+Symbol: Green
+   Definitions
+      At line 47 in file main.asm
+   Uses
+      At line 64 in file main.asm
+Comment: Green used once
+Main 00000044
+
+Symbol: Main
+   Definitions
+      At line 44 in file main.asm
+   Uses
+      At line 80 in file main.asm
+      At line 99 in file main.asm
+      At line 104 in file main.asm
+
+RESET 00000000
+
+Symbol: RESET
+   Definitions
+      At line 9 in file main.asm
+   Uses
+      None
+Comment: RESET unused
+Red 000000EC
+
+Symbol: Red
+   Definitions
+      At line 88 in file main.asm
+   Uses
+      At line 102 in file main.asm
+Comment: Red used once
+T_U 0000012C
+
+Symbol: T_U
+   Definitions
+      At line 107 in file main.asm
+   Uses
+      At line 57 in file main.asm
+Comment: T_U used once
+Yellow 000000A8
+
+Symbol: Yellow
+   Definitions
+      At line 70 in file main.asm
+   Uses
+      At line 83 in file main.asm
+Comment: Yellow used once
+imm_Y 0000009C
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+
+Symbol: imm_Y
+   Definitions
+      At line 67 in file main.asm
+   Uses
+      At line 51 in file main.asm
+      At line 61 in file main.asm
+
+8 symbols
+340 symbols in table

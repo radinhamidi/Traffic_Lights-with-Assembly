@@ -1,0 +1,4 @@
+--cpu ARM7TDMI "main.o" --strict --scatter "test1.sct" 
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols 
+--info sizes --info totals --info unused --info veneers 
+ --list ".\test1.map" -o "test1.axf"

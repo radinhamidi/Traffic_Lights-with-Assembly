@@ -1,0 +1,2 @@
+Dependencies for Project 'test1', Target 'Target 1': (DO NOT MODIFY !)
+F (.\main.asm)(0x577CB64C)(--cpu ARM7TDMI -g --apcs=interwork -I C:\Keil\ARM\RV31\Inc -I C:\Keil\ARM\CMSIS\Include -I C:\Keil\ARM\Inc\Atmel\SAM7X --list "main.lst" --xref -o "main.o" --depend "main.d")
